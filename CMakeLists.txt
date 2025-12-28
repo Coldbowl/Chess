@@ -13,6 +13,16 @@ FetchContent_Declare(SFML
         SYSTEM)
 FetchContent_MakeAvailable(SFML)
 
-add_executable(Chess main.cpp)
+add_executable(Chess main.cpp
+        src/engine.hpp
+        src/state/state.hpp
+        src/engine.cpp
+        src/config.hpp
+        src/state/menu_state.hpp
+        src/state/menu_state.cpp
+        src/GUI/text_handler.hpp
+        src/GUI/text_handler.cpp
+        src/GUI/button.hpp
+        src/GUI/button.cpp)
 target_compile_features(Chess PRIVATE cxx_std_20)
-target_link_libraries(Chess PRIVATE SFML::Graphics)
+target_link_libraries(Chess PRIVATE SFML::Graphics SFML::Audio)
