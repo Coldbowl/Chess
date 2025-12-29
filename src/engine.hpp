@@ -1,7 +1,11 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
+#include <SFML/Graphics/Image.hpp>
+#include <SFML/Graphics/Sprite.hpp>
+
 #include "state/state.hpp"
+#include "GUI/audio_handler.hpp"
 
 class MenuState; // Forward declaration
 
@@ -17,6 +21,13 @@ class Engine {
 
     State* current_state = nullptr;
 
+    AudioHandler audio_handler;
+
+    sf::Texture background_texture;
+    sf::Sprite background_sprite;
+
+    friend class MenuState;
+
 public:
     Engine();
 
@@ -29,4 +40,6 @@ public:
     void quit();
 
     void handle_events();
+
+    void draw_background();
 };

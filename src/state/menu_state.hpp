@@ -1,8 +1,5 @@
 #pragma once
 
-#include <SFML/Graphics/Image.hpp>
-#include <SFML/Graphics/Sprite.hpp>
-
 
 #include "state.hpp"
 #include "../GUI/button.hpp"
@@ -12,8 +9,6 @@ namespace sf { class RenderWindow; }
 
 class MenuState final : public State {
     sf::RenderWindow& window;
-    sf::Texture background_texture;
-    sf::Sprite background_sprite;
 
     std::array<std::unique_ptr<Button>, 4> buttons;
 
@@ -29,8 +24,6 @@ public:
     explicit MenuState(Engine* engine, sf::RenderWindow& window);
 
     void update() override;
-
     void render() override;
-
     void handle_events() override;
 };

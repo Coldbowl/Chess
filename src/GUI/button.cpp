@@ -8,7 +8,6 @@
 #include "SFML/Graphics/RenderWindow.hpp"
 
 using std::string;
-sf::SoundBuffer Button::buffer;
 
 Button::Button(const float button_x, const float button_y, const float button_width, const float button_height, string text, sf::RenderWindow& window, std::function<void()> on_click, const bool* selected, const bool inverted, const sf::Color color)
     : button_x{button_x}
@@ -22,13 +21,7 @@ Button::Button(const float button_x, const float button_y, const float button_wi
       , inverted{inverted}
       , text_handler(this->text, button_x, button_y, button_width, button_height, window)
       , on_click{std::move(on_click)}
-      , sound{buffer} {
-    if (buffer.getSampleCount() == 0) {
-        if (!buffer.loadFromFile("src/Assets/SFX/click.wav")) {
-            throw sf::Exception("Unable to load file from provided path");
-        }
-    }
-    sound.setBuffer(buffer);
+      {
 
     button.setPosition({button_x, button_y});
     button.setSize({button_width, button_height});
@@ -67,8 +60,7 @@ bool Button::is_hovering(const sf::Vector2i& mouse_position) {
     return true;
 }
 
-void Button::clicked() {
-    sound.play();
+void Button::clicked() const {
     if (on_click) {
         on_click();
     }

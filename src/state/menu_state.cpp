@@ -1,11 +1,12 @@
 #include <array>
 #include <memory>
-#include <iostream>
 #include <filesystem>
 
 #include "state.hpp"
 #include "../GUI/button.hpp"
 #include "menu_state.hpp"
+
+#include "game_state.hpp"
 #include "../config.hpp"
 #include "../engine.hpp"
 
@@ -23,15 +24,7 @@ MenuState::MenuState(Engine* engine, sf::RenderWindow& window)
         200,
         true
     }
-    , background_sprite(background_texture)
     {
-
-    if (!background_texture.loadFromFile(
-            "src/Assets/Images/Backgrounds/Background.png")) {
-        throw std::runtime_error("Failed to load background texture");
-            }
-
-    background_sprite.setTexture(background_texture, true);
 
     buttons[0] = std::make_unique<Button>(
         SCREEN_WIDTH / 10.0,
@@ -41,7 +34,7 @@ MenuState::MenuState(Engine* engine, sf::RenderWindow& window)
         "White",
         window,
         [this]() {
-            std::cout << "You clicked white!\n";
+            this->engine->audio_handler.play_click();
             this->white_selected = true;
         }
         , &white_selected
@@ -54,7 +47,7 @@ MenuState::MenuState(Engine* engine, sf::RenderWindow& window)
         "Black",
         window,
         [this]() {
-            std::cout << "You clicked black!\n";
+            this->engine->audio_handler.play_click();
             this->white_selected = false;
         }
         , &white_selected
@@ -67,8 +60,9 @@ MenuState::MenuState(Engine* engine, sf::RenderWindow& window)
         SCREEN_HEIGHT / 10.0,
     "Play",
         window,
-        []() {
-            std::cout << "You clicked play\n";
+        [this]() {
+            this->engine->audio_handler.play_click();
+            this->engine->change_state(new GameState(this->engine, this->window));
         }
     );
     buttons[3] = std::make_unique<Button>(
@@ -79,6 +73,7 @@ MenuState::MenuState(Engine* engine, sf::RenderWindow& window)
         "Quit",
         window,
         [this]() {
+            this->engine->audio_handler.play_click();
             this->engine->quit();
         }
     );
@@ -89,7 +84,6 @@ void MenuState::update() {
 }
 
 void MenuState::render() {
-    window.draw(background_sprite);
     title_text.render_text();
 
     is_hovering = false;

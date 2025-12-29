@@ -32,9 +32,6 @@ class Button {
     sf::RectangleShape button;
     std::function<void()> on_click;
 
-    static sf::SoundBuffer buffer;
-    sf::Sound sound;
-
 
 
 public:
@@ -44,5 +41,5 @@ public:
 
     bool is_hovering(const sf::Vector2i& mouse_position);
 
-    void clicked();
+    void clicked() const;
 };

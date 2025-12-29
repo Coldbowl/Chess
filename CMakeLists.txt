@@ -23,6 +23,11 @@ add_executable(Chess main.cpp
         src/GUI/text_handler.hpp
         src/GUI/text_handler.cpp
         src/GUI/button.hpp
-        src/GUI/button.cpp)
+        src/GUI/button.cpp
+        src/state/game_state.hpp
+        src/state/game_state.cpp
+        src/GUI/audio_handler.hpp
+)
+
 target_compile_features(Chess PRIVATE cxx_std_20)
 target_link_libraries(Chess PRIVATE SFML::Graphics SFML::Audio)

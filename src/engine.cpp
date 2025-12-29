@@ -3,10 +3,24 @@
 #include "engine.hpp"
 #include "state/menu_state.hpp"
 #include "config.hpp"
+#include "GUI/audio_handler.hpp"
+
+sf::SoundBuffer AudioHandler::sound_buffer;
+
+const std::string CLICK_PATH = "../Chess/src/Assets/SFX/click_sound.wav";
+const std::string BACKGROUND_PATH = "src/Assets/Images/Backgrounds/blurred_background.png";
 
 Engine::Engine()
-    : window(sf::VideoMode({SCREEN_WIDTH, SCREEN_HEIGHT}),"Chess")
-{}
+    : window(sf::VideoMode({SCREEN_WIDTH, SCREEN_HEIGHT}), "Chess")
+    , audio_handler(CLICK_PATH)
+    , background_sprite(background_texture) {
+    if (!background_texture.loadFromFile(
+        BACKGROUND_PATH)) {
+        throw std::runtime_error("Failed to load background texture");
+        }
+
+    background_sprite.setTexture(background_texture, true);
+}
 
 Engine::~Engine() {
     delete current_state;
@@ -26,6 +40,7 @@ void Engine::run() {
         current_state->handle_events();
         current_state->update();
         window.clear();
+        draw_background();
         current_state->render();
         window.display();
     }
@@ -48,4 +63,8 @@ void Engine::handle_events() {
             }
         }
     }
+}
+
+void Engine::draw_background() {
+    window.draw(background_sprite);
 }
