@@ -1,7 +1,6 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
-#include <SFML/Graphics/Image.hpp>
 #include <SFML/Graphics/Sprite.hpp>
 
 #include "state/state.hpp"
@@ -26,7 +25,7 @@ class Engine {
     sf::Texture background_texture;
     sf::Sprite background_sprite;
 
-    friend class MenuState;
+    friend class MenuState; // <--- Cute
 
 public:
     Engine();

@@ -27,6 +27,10 @@ add_executable(Chess main.cpp
         src/state/game_state.hpp
         src/state/game_state.cpp
         src/GUI/audio_handler.hpp
+        src/Chess/position.hpp
+        src/Chess/position.cpp
+        src/Chess/Utils/strings.hpp
+        src/Chess/Utils/binary.hpp
 )
 
 target_compile_features(Chess PRIVATE cxx_std_20)

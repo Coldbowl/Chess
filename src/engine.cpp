@@ -14,10 +14,9 @@ Engine::Engine()
     : window(sf::VideoMode({SCREEN_WIDTH, SCREEN_HEIGHT}), "Chess")
     , audio_handler(CLICK_PATH)
     , background_sprite(background_texture) {
-    if (!background_texture.loadFromFile(
-        BACKGROUND_PATH)) {
+    if (!background_texture.loadFromFile(BACKGROUND_PATH)) {
         throw std::runtime_error("Failed to load background texture");
-        }
+    }
 
     background_sprite.setTexture(background_texture, true);
 }

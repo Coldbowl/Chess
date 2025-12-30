@@ -1,25 +1,90 @@
+#include "game_state.hpp"
+
 #include <SFML/Graphics/RectangleShape.hpp>
 #include <SFML/Graphics/Color.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>
 
-#include "game_state.hpp"
 #include "../config.hpp"
+#include "../Chess/Position.hpp"
 
-sf::Color white_square_color = { 236, 236, 208 };
-sf::Color black_square_color = { 114, 149, 81 };
+constexpr sf::Color white_square_color = { 236, 236, 208 };
+constexpr sf::Color black_square_color = { 114, 149, 81 };
 
+constexpr int TILE_SIZE = 160;
+constexpr float SCALE = 100.f / 160.f;
+const std::string PIECES_PATH = "src/Assets/Images/Chess Pieces/Chess Pieces Sprite.png";
 
 GameState::GameState(Engine *engine, sf::RenderWindow &window)
     : State(engine)
-    , window{window}
-{}
+      , window{window}
+      , white_pawn_sprite(pieces_texture)
+      , white_rook_sprite(pieces_texture)
+      , white_knight_sprite(pieces_texture)
+      , white_bishop_sprite(pieces_texture)
+      , white_queen_sprite(pieces_texture)
+      , white_king_sprite(pieces_texture)
+      , black_pawn_sprite(pieces_texture)
+      , black_rook_sprite(pieces_texture)
+      , black_knight_sprite(pieces_texture)
+      , black_bishop_sprite(pieces_texture)
+      , black_queen_sprite(pieces_texture)
+      , black_king_sprite(pieces_texture)
+{
+    if (!pieces_texture.loadFromFile(PIECES_PATH)) {
+        throw std::runtime_error("Failed to load piece sprite from provided path");
+    }
+
+    white_king_sprite.setTextureRect({ {0 * TILE_SIZE, 0}, {TILE_SIZE, TILE_SIZE} });
+    white_king_sprite.setScale({ SCALE, SCALE });
+
+    white_queen_sprite.setTextureRect({ {1 * TILE_SIZE, 0}, {TILE_SIZE, TILE_SIZE} });
+    white_queen_sprite.setScale({ SCALE, SCALE });
+
+    white_bishop_sprite.setTextureRect({ {2 * TILE_SIZE, 0}, {TILE_SIZE, TILE_SIZE} });
+    white_bishop_sprite.setScale({ SCALE, SCALE });
+
+    white_knight_sprite.setTextureRect({ {3 * TILE_SIZE, 0}, {TILE_SIZE, TILE_SIZE} });
+    white_knight_sprite.setScale({ SCALE, SCALE });
+
+    white_rook_sprite.setTextureRect({ {4 * TILE_SIZE, 0}, {TILE_SIZE, TILE_SIZE} });
+    white_rook_sprite.setScale({ SCALE, SCALE });
+
+    white_pawn_sprite.setTextureRect({ {5 * TILE_SIZE, 0}, {TILE_SIZE, TILE_SIZE} });
+    white_pawn_sprite.setScale({ SCALE, SCALE });
+
+    black_king_sprite.setTextureRect({ {0 * TILE_SIZE, 1 * TILE_SIZE}, {TILE_SIZE, TILE_SIZE} });
+    black_king_sprite.setScale({ SCALE, SCALE });
+
+    black_queen_sprite.setTextureRect({ {1 * TILE_SIZE, 1 * TILE_SIZE}, {TILE_SIZE, TILE_SIZE} });
+    black_queen_sprite.setScale({ SCALE, SCALE });
+
+    black_bishop_sprite.setTextureRect({ {2 * TILE_SIZE, 1 * TILE_SIZE}, {TILE_SIZE, TILE_SIZE} });
+    black_bishop_sprite.setScale({ SCALE, SCALE });
+
+    black_knight_sprite.setTextureRect({ {3 * TILE_SIZE, 1 * TILE_SIZE}, {TILE_SIZE, TILE_SIZE} });
+    black_knight_sprite.setScale({ SCALE, SCALE });
+
+    black_rook_sprite.setTextureRect({ {4 * TILE_SIZE, 1 * TILE_SIZE}, {TILE_SIZE, TILE_SIZE} });
+    black_rook_sprite.setScale({ SCALE, SCALE });
+
+    black_pawn_sprite.setTextureRect({ {5 * TILE_SIZE, 1 * TILE_SIZE}, {TILE_SIZE, TILE_SIZE} });
+    black_pawn_sprite.setScale({ SCALE, SCALE });
+
+    current_position = Position::from_FEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+}
 
 void GameState::draw_board() const {
+    sf::RectangleShape back_shape;
+    back_shape.setSize({ 900.f, 900.f });
+    back_shape.setPosition({ (SCREEN_WIDTH - 900) / 2 , 0 });
+    back_shape.setFillColor({41, 41, 41});
+    window.draw(back_shape);
+
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
             sf::RectangleShape square;
             square.setSize({ 100.f, 100.f });
-            square.setPosition({ i * 100.f + (SCREEN_WIDTH - 800) / 2 , j * 100.f + 50.f });
+            square.setPosition({ i * 100.f + (SCREEN_WIDTH - 800) / 2, j * 100.f + 50.f });
             ((i + j) % 2 == 0) ? square.setFillColor(white_square_color) : square.setFillColor(black_square_color);
             window.draw(square);
         }
@@ -27,8 +92,73 @@ void GameState::draw_board() const {
 }
 
 
+
+void GameState::draw_pieces() {
+    struct PieceInfo {
+        sf::Sprite* sprite;
+        uint64_t (Position::*getter)() const;
+        bool single;
+    };
+
+    // White pieces
+    PieceInfo white_pieces[] = {
+        { &white_king_sprite, &Position::get_white_king_bitboard, true },
+        { &white_queen_sprite, &Position::get_white_queen_bitboard, false },
+        { &white_bishop_sprite, &Position::get_white_bishop_bitboard, false },
+        { &white_knight_sprite, &Position::get_white_knight_bitboard, false },
+        { &white_rook_sprite, &Position::get_white_rook_bitboard, false },
+        { &white_pawn_sprite, &Position::get_white_pawn_bitboard, false }
+    };
+
+    // Black pieces
+    PieceInfo black_pieces[] = {
+        { &black_king_sprite, &Position::get_black_king_bitboard, true },
+        { &black_queen_sprite, &Position::get_black_queen_bitboard, false },
+        { &black_bishop_sprite, &Position::get_black_bishop_bitboard, false },
+        { &black_knight_sprite, &Position::get_black_knight_bitboard, false },
+        { &black_rook_sprite, &Position::get_black_rook_bitboard, false },
+        { &black_pawn_sprite, &Position::get_black_pawn_bitboard, false }
+    };
+
+    // Draw white pieces
+    for (int p = 0; p < 6; ++p) {
+        sf::Sprite* sprite = white_pieces[p].sprite;
+        uint64_t bb = (current_position.*(white_pieces[p].getter))();
+        for (int i = 63; i >= 0; --i) {
+            if (bb & (1ULL << i)) {
+                int drawing_i = 63 - i;
+                sprite->setPosition({
+                    (drawing_i % 8) * 100.f + (SCREEN_WIDTH - 800) / 2,
+                    (drawing_i / 8) * 100.f + 50.f
+                });
+                window.draw(*sprite);
+                if (white_pieces[p].single) break;
+            }
+        }
+    }
+
+    // Draw black pieces
+    for (int p = 0; p < 6; ++p) {
+        sf::Sprite* sprite = black_pieces[p].sprite;
+        uint64_t bb = (current_position.*(black_pieces[p].getter))();
+        for (int i = 63; i >= 0; --i) {
+            if (bb & (1ULL << i)) {
+                int drawing_i = 63 - i;
+                sprite->setPosition({
+                    (drawing_i % 8) * 100.f + (SCREEN_WIDTH - 800) / 2,
+                    (drawing_i / 8) * 100.f + 50.f
+                });
+                window.draw(*sprite);
+                if (black_pieces[p].single) break;
+            }
+        }
+    }
+}
+
+
 void GameState::render() {
     draw_board();
+    draw_pieces();
 }
 
 void GameState::handle_events() {
