@@ -62,7 +62,7 @@ MenuState::MenuState(Engine* engine, sf::RenderWindow& window)
         window,
         [this]() {
             this->engine->audio_handler.play_click();
-            this->engine->change_state(new GameState(this->engine, this->window));
+            this->engine->change_state(new GameState(this->engine, this->window, this->white_selected));
         }
     );
     buttons[3] = std::make_unique<Button>(

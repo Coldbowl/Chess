@@ -31,6 +31,7 @@ add_executable(Chess main.cpp
         src/Chess/position.cpp
         src/Chess/Utils/strings.hpp
         src/Chess/Utils/binary.hpp
+        src/Chess/move.hpp
 )
 
 target_compile_features(Chess PRIVATE cxx_std_20)
