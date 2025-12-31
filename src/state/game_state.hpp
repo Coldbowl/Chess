@@ -2,10 +2,12 @@
 
 #include <SFML/Graphics.hpp>
 #include <SFML/Graphics/Sprite.hpp>
+#include <vector>
 
 #include "state.hpp"
 #include "../Chess/Position.hpp"
 
+using std::vector;
 
 struct PieceInfo {
     sf::Sprite* sprite;
@@ -21,6 +23,7 @@ class GameState final : public State {
     bool pressed = false;
     sf::Vector2i mouse_position;
 
+    vector<Move> legal_moves;
     Move move;
 
     sf::RenderWindow& window;

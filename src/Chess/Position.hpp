@@ -16,8 +16,10 @@ class Position {
     uint64_t white_piece_bitboard = 0;
     uint64_t black_piece_bitboard = 0;
 
-    bool white_to_move;
 public:
+    bool white_to_move;
+    bool can_move = true; // For rendering purposes
+
     Position() = default;
     Position(const Position& p) = default;
     Position& operator=(const Position&) = default;
@@ -37,7 +39,7 @@ public:
         uint64_t black_pawn
     );
 
-    Position move(const Move& m);
+    void move(const Move& m);
 
     uint64_t& piece(int color, int piece) {
         return bitboards[color][piece];

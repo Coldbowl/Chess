@@ -4,9 +4,12 @@
 #include <SFML/Graphics/RectangleShape.hpp>
 #include <SFML/Graphics/Color.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>
+#include <algorithm>
 
 #include "../config.hpp"
 #include "../Chess/Position.hpp"
+#include "../Chess/move_generator.hpp"
+
 constexpr sf::Color white_square_color = { 236, 236, 208 };
 constexpr sf::Color black_square_color = { 114, 149, 81 };
 
@@ -73,6 +76,11 @@ GameState::GameState(Engine *engine, sf::RenderWindow &window, const bool is_pla
 
     current_position = Position::from_FEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
     current_position.update_piece_bitboards();
+    legal_moves = MoveGenerator::generate_legal_moves(current_position);
+
+    for (const Move& m : legal_moves) {
+        std::cout << static_cast<int>(m.from) << " --> " << static_cast<int>(m.to) << "\n";
+    }
 }
 
 void GameState::draw_board() const {
@@ -145,19 +153,43 @@ void GameState::clicked_square() {
     constexpr int top_y = 50;
     constexpr int bottom_y = 800 + top_y;
 
-    std::cout << move.from << "\n";
-
     if (mouse_position.x > left_x && mouse_position.x < right_x && mouse_position.y > top_y && mouse_position.y < bottom_y) {
-        if (const uint64_t square_clicked = (mouse_position.x - left_x) / 100 + (mouse_position.y - top_y) / 100 * 8; 1ULL << square_clicked & (current_position.get_black_piece_bitboard() | current_position.get_white_piece_bitboard())) {
-            if (move.from == -1) {
+        // Cannot change this to a uint8_t because fuck you and fuck everything about this stupid fucking language
+        uint32_t square_clicked = (mouse_position.x - left_x) / 100 + (mouse_position.y - top_y) / 100 * 8;
+        if (is_player_white) square_clicked = 63 - square_clicked;
+
+        const uint64_t square_mask = 1ULL << square_clicked;
+
+        std::cout << square_clicked << "\n";
+
+        if (square_mask & (current_position.get_black_piece_bitboard() | current_position.get_white_piece_bitboard())) {
+            if (move.from == Move::INVALID) {
                 move.from = square_clicked;
-                std::cout << "Changed from\n";
-            } else if (move.from != square_clicked) {
-                std::cout << "Changed to\n";
-                move.to = square_clicked;
-                current_position = current_position.move(move);
+                if      (square_mask & current_position.get_white_pawn_bitboard())   move.piece = PAWN;
+                else if (square_mask & current_position.get_white_knight_bitboard()) move.piece = KNIGHT;
+                else if (square_mask & current_position.get_white_bishop_bitboard()) move.piece = BISHOP;
+                else if (square_mask & current_position.get_white_rook_bitboard())   move.piece = ROOK;
+                else if (square_mask & current_position.get_white_queen_bitboard()) move.piece = QUEEN;
+                else if (square_mask & current_position.get_white_king_bitboard())  move.piece = KING;
+
+                else if (square_mask & current_position.get_black_pawn_bitboard())   move.piece = PAWN;
+                else if (square_mask & current_position.get_black_knight_bitboard()) move.piece = KNIGHT;
+                else if (square_mask & current_position.get_black_bishop_bitboard()) move.piece = BISHOP;
+                else if (square_mask & current_position.get_black_rook_bitboard())   move.piece = ROOK;
+                else if (square_mask & current_position.get_black_queen_bitboard()) move.piece = QUEEN;
+                else if (square_mask & current_position.get_black_king_bitboard())  move.piece = KING;
             }
+        } else if (move.from != Move::INVALID) {
+            move.to = square_clicked;
+            if (std::ranges::find(legal_moves, move) != legal_moves.end()) current_position.move(move);
+
+            else std::cout << "Brudda what the fuck are you doing?\n";
+
+            current_position.can_move = false;
+            move.reset();
         }
+    } else {
+        move.reset();
     }
 }
 
@@ -180,7 +212,13 @@ void GameState::handle_events() {
 }
 
 void GameState::update() {
-
+    if (current_position.can_move) {
+        if (!(is_player_white && current_position.white_to_move || !is_player_white && !current_position.white_to_move)) {
+            // std::cout << "The bot can move now\n";
+        }
+    } else {
+        current_position.can_move = true;
+    }
 }
 
 

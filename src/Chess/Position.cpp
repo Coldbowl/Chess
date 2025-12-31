@@ -128,19 +128,15 @@ Position::Position(
     update_piece_bitboards();
 }
 
-Position Position::move(const Move& m) {
-    Position new_position = *this;
+void Position::move(const Move& m) {
+    const uint64_t from_bb = 1ULL << m.from;
+    const uint64_t to_bb = 1ULL << m.to;
 
-    uint64_t from_bb = 1ULL << m.from;
-    uint64_t to_bb = 1ULL << m.to;
+    const int to_move = white_to_move ? WHITE : BLACK;
 
-    int to_move = white_to_move ? WHITE : BLACK;
+    bitboards[to_move][m.piece] ^= from_bb | to_bb;
 
-    new_position.bitboards[to_move][m.piece] ^= from_bb | to_bb;
-
-    new_position.white_to_move ^= 1;
-
-    return new_position;
+    white_to_move ^= 1;
 }
 
 

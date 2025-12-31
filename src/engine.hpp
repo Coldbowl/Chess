@@ -25,7 +25,7 @@ class Engine {
     sf::Texture background_texture;
     sf::Sprite background_sprite;
 
-    friend class MenuState; // <--- Cute
+    friend class MenuState; // Literally the cutest thing I've ever seen
 
 public:
     Engine();

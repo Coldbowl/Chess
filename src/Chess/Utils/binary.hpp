@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <iostream>
 
-inline void print_binary_number(const uint64_t number) {
+inline void print_binary_number(const uint64_t number) { // This function prints the bits in engine-space, not how us humans see it.
     std::cout << "\n";
     for (int i = 63; i >= 0; i--) {
         char output;
