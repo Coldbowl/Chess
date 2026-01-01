@@ -136,7 +136,15 @@ void Position::move(const Move& m) {
 
     bitboards[to_move][m.piece] ^= from_bb | to_bb;
 
+    for (int b = 0; b < 6; b++) {
+        if (to_bb & bitboards[!to_move][b]) {
+            bitboards[!to_move][b] &= ~to_bb;
+            break;
+        }
+    }
+
     white_to_move ^= 1;
+    update_piece_bitboards();
 }
 
 

@@ -74,6 +74,8 @@ public:
 
     void clicked_square();
 
+    void draw_selected_square() const;
+
     void update() override;
     void render() override;
     void handle_events() override;

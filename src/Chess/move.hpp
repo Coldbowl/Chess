@@ -5,11 +5,11 @@
 
 enum Piece { PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING };
 
+enum Flags { INVALID, CAPTURE, CASTLING, PROMOTION_TO_KNIGHT, PROMOTION_TO_BISHOP, PROMOTION_TO_ROOK, PROMOTION_TO_QUEEN, EN_PASSANT };
+
 
 
 struct Move {
-    static constexpr uint8_t INVALID = 64;
-
     uint8_t from = INVALID;
     uint8_t to = INVALID;
     uint8_t piece = INVALID;
@@ -17,7 +17,7 @@ struct Move {
 
     Move() = default;
 
-    Move(const int from, const int to, const int piece, const int flags)
+    Move(const int from, const int to, const int piece, const Flags flags)
     : from(from)
     , to(to)
     , piece(piece)

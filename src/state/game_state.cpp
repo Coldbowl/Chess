@@ -9,13 +9,24 @@
 #include "../config.hpp"
 #include "../Chess/Position.hpp"
 #include "../Chess/move_generator.hpp"
+#include "../Chess/Utils/square_to_move.hpp"
+#include "../Chess/Utils/binary.hpp"
+
+
+using std::string;
 
 constexpr sf::Color white_square_color = { 236, 236, 208 };
 constexpr sf::Color black_square_color = { 114, 149, 81 };
 
 constexpr int TILE_SIZE = 160;
 constexpr float SCALE = 100.f / 160.f;
-const std::string PIECES_PATH = "src/Assets/Images/Chess Pieces/Chess Pieces Sprite.png";
+const string PIECES_PATH = "src/Assets/Images/Chess Pieces/Chess Pieces Sprite.png";
+
+namespace FEN {
+    const string STARTING_POSITION = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    const string TESTING_PAWN_CAPTURE_POSITION = "rnbqkbnr/pp1ppppp/8/2p5/1P6/8/P1PPPPPP/RNBQKBNR w KQkq c6 0 1";
+    const string PAWN_CAPTURE_POSITION = "rnbqkbnr/8/8/pppppppp/PPPPPPPP/8/8/RNBQKBNR b KQkq a3 0 1";
+}
 
 GameState::GameState(Engine *engine, sf::RenderWindow &window, const bool is_player_white)
     : State(engine)
@@ -74,13 +85,9 @@ GameState::GameState(Engine *engine, sf::RenderWindow &window, const bool is_pla
     black_pawn_sprite.setTextureRect({ {5 * TILE_SIZE, 1 * TILE_SIZE}, {TILE_SIZE, TILE_SIZE} });
     black_pawn_sprite.setScale({ SCALE, SCALE });
 
-    current_position = Position::from_FEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    current_position = Position::from_FEN(FEN::PAWN_CAPTURE_POSITION);
     current_position.update_piece_bitboards();
     legal_moves = MoveGenerator::generate_legal_moves(current_position);
-
-    for (const Move& m : legal_moves) {
-        std::cout << static_cast<int>(m.from) << " --> " << static_cast<int>(m.to) << "\n";
-    }
 }
 
 void GameState::draw_board() const {
@@ -114,11 +121,15 @@ void GameState::draw_pieces() const {
         const uint64_t bb = (current_position.*(white_bitboards[p].getter))();
         for (int i = 63; i >= 0; --i) {
             if (bb & (1ULL << i)) {
-                int drawing_i;
-                (is_player_white) ? drawing_i = 63 - i : drawing_i = i;
+                const int file = i % 8;
+                const int rank = i / 8;
+
+                const int draw_file = is_player_white ? file : 7 - file;
+                const int draw_rank = is_player_white ? 7 - rank : rank;
+
                 sprite->setPosition({
-                    (drawing_i % 8) * 100.f + (SCREEN_WIDTH - 800) / 2,
-                    (drawing_i / 8) * 100.f + 50.f
+                    draw_file * 100.f + (SCREEN_WIDTH - 800) / 2,
+                    draw_rank * 100.f + 50.f
                 });
                 window.draw(*sprite);
                 if (white_bitboards[p].single) break;
@@ -132,11 +143,15 @@ void GameState::draw_pieces() const {
         uint64_t bb = (current_position.*(black_bitboards[p].getter))();
         for (int i = 63; i >= 0; --i) {
             if (bb & (1ULL << i)) {
-                int drawing_i;
-                (is_player_white) ? drawing_i = 63 - i : drawing_i = i;
+                const int file = i % 8;
+                const int rank = i / 8;
+
+                const int draw_file = is_player_white ? file : 7 - file;
+                const int draw_rank = is_player_white ? 7 - rank : rank;
+
                 sprite->setPosition({
-                    (drawing_i % 8) * 100.f + (SCREEN_WIDTH - 800) / 2,
-                    (drawing_i / 8) * 100.f + 50.f
+                    draw_file * 100.f + (SCREEN_WIDTH - 800) / 2,
+                    draw_rank * 100.f + 50.f
                 });
                 window.draw(*sprite);
                 if (black_bitboards[p].single) break;
@@ -154,16 +169,25 @@ void GameState::clicked_square() {
     constexpr int bottom_y = 800 + top_y;
 
     if (mouse_position.x > left_x && mouse_position.x < right_x && mouse_position.y > top_y && mouse_position.y < bottom_y) {
-        // Cannot change this to a uint8_t because fuck you and fuck everything about this stupid fucking language
-        uint32_t square_clicked = (mouse_position.x - left_x) / 100 + (mouse_position.y - top_y) / 100 * 8;
-        if (is_player_white) square_clicked = 63 - square_clicked;
+        // Cannot change this to a uint8_t because fuck you and fuck everything about this stupid fucking languageint file = (mouse_position.x - left_x) / 100;
+        const int file = (mouse_position.x - left_x) / 100;
+        const int screen_rank = (mouse_position.y - top_y) / 100;
+
+        const int board_file = is_player_white ? file : 7 - file;
+        const int board_rank = is_player_white ? 7 - screen_rank : screen_rank;
+
+        uint32_t square_clicked = board_rank * 8 + board_file;
 
         const uint64_t square_mask = 1ULL << square_clicked;
 
+        // std::cout << square_to_move(static_cast<int>(square_clicked)) << "\n";
         std::cout << square_clicked << "\n";
 
-        if (square_mask & (current_position.get_black_piece_bitboard() | current_position.get_white_piece_bitboard())) {
-            if (move.from == Move::INVALID) {
+        uint64_t current_bitboard = (current_position.white_to_move) ? current_position.get_white_piece_bitboard() : current_position.get_black_piece_bitboard();
+        uint64_t opposing_bitboard = (!current_position.white_to_move) ? current_position.get_white_piece_bitboard() : current_position.get_black_piece_bitboard();
+
+        if (square_mask & current_bitboard) {
+            if (move.from == INVALID) {
                 move.from = square_clicked;
                 if      (square_mask & current_position.get_white_pawn_bitboard())   move.piece = PAWN;
                 else if (square_mask & current_position.get_white_knight_bitboard()) move.piece = KNIGHT;
@@ -179,11 +203,16 @@ void GameState::clicked_square() {
                 else if (square_mask & current_position.get_black_queen_bitboard()) move.piece = QUEEN;
                 else if (square_mask & current_position.get_black_king_bitboard())  move.piece = KING;
             }
-        } else if (move.from != Move::INVALID) {
+        } else if (move.from != INVALID) {
             move.to = square_clicked;
-            if (std::ranges::find(legal_moves, move) != legal_moves.end()) current_position.move(move);
-
-            else std::cout << "Brudda what the fuck are you doing?\n";
+            if (square_mask & opposing_bitboard) move.flags = CAPTURE;
+            else move.flags = INVALID;
+            if (std::ranges::find(legal_moves, move) != legal_moves.end()) {
+                current_position.move(move);
+                move.reset();
+                legal_moves.clear();
+                legal_moves = MoveGenerator::generate_legal_moves(current_position);
+            }
 
             current_position.can_move = false;
             move.reset();
@@ -193,10 +222,29 @@ void GameState::clicked_square() {
     }
 }
 
+void GameState::draw_selected_square() const {
+    if (move.from != INVALID) {
+        sf::RectangleShape piece_square;
+        piece_square.setSize({ 100.f, 100.f });
+        piece_square.setFillColor({255, 0, 0, 128});
+        piece_square.setPosition({ static_cast<float>((mouse_position.x / 100) * 100), static_cast<float>((mouse_position.y - 50 ) / 100 * 100) + 50 });
+        window.draw(piece_square);
+        for (const Move& m : legal_moves) {
+            if (m.from == move.from) {
+                sf::RectangleShape move_square;
+                move_square.setSize({ 100.f, 100.f });
+                move_square.setFillColor({255, 0, 0, 128});
+                move_square.setPosition( { (m.to % 8) * 100.f + (SCREEN_WIDTH - 800) / 2, (7 - m.to / 8) * 100.f + 50.f } );
+                window.draw(move_square);
+            }
+        }
+    }
+}
 
 void GameState::render() {
     draw_board();
     draw_pieces();
+    draw_selected_square();
 }
 
 void GameState::handle_events() {
